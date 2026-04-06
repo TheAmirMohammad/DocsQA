@@ -1,0 +1,13 @@
+.venv
+.git
+.omc
+graphify-out
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.db
+.coverage
+*.egg-info
+.env
