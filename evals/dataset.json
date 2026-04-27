@@ -1,0 +1,402 @@
+[
+  {
+    "id": "q01",
+    "question": "What two libraries does FastAPI build on for web and data parsing?",
+    "expected_sources": ["01_intro.md"],
+    "expected_headings": ["Technical Foundation"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q02",
+    "question": "How does FastAPI execute synchronous path operation functions?",
+    "expected_sources": ["01_intro.md"],
+    "expected_headings": ["Concurrency and Async"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q03",
+    "question": "Where does interactive Swagger UI documentation run by default?",
+    "expected_sources": ["02_first_steps.md"],
+    "expected_headings": ["Interactive API Documentation"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q04",
+    "question": "What documentation is served at /redoc?",
+    "expected_sources": ["02_first_steps.md"],
+    "expected_headings": ["Interactive API Documentation"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q05",
+    "question": "How do you declare an integer path parameter in a path operation decorator?",
+    "expected_sources": ["03_path_params.md"],
+    "expected_headings": ["Basic Path Parameter Declaration"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q06",
+    "question": "What HTTP status code is returned when path parameter validation fails?",
+    "expected_sources": ["03_path_params.md"],
+    "expected_headings": ["Path Parameter Validation Error Structure"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q07",
+    "question": "How can you restrict valid path parameters to predefined values using Python?",
+    "expected_sources": ["03_path_params.md"],
+    "expected_headings": ["Predefined Values with Python Enum"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q08",
+    "question": "How are function parameters not defined in the path interpreted by FastAPI?",
+    "expected_sources": ["04_query_params.md"],
+    "expected_headings": ["Basic Query Parameters"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q09",
+    "question": "How do you define an optional query parameter with a default value of None?",
+    "expected_sources": ["04_query_params.md"],
+    "expected_headings": ["Defaults and Optional Parameters"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q10",
+    "question": "Which string representations does FastAPI automatically convert to boolean True?",
+    "expected_sources": ["04_query_params.md"],
+    "expected_headings": ["Boolean Parameter Conversion"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q11",
+    "question": "What library is used to declare and validate request bodies?",
+    "expected_sources": ["05_request_body.md"],
+    "expected_headings": ["Declaring Request Bodies with Pydantic"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q12",
+    "question": "How do you define validation constraints like gt=0 on request body fields?",
+    "expected_sources": ["05_request_body.md"],
+    "expected_headings": ["Declaring Request Bodies with Pydantic"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q13",
+    "question": "Can Pydantic models contain nested models and lists of other models?",
+    "expected_sources": ["05_request_body.md"],
+    "expected_headings": ["Nested Models and Lists"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q14",
+    "question": "How do you inject shared parameters across multiple endpoints using Depends?",
+    "expected_sources": ["06_dependencies.md"],
+    "expected_headings": ["Basic Dependency with Depends"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q15",
+    "question": "How do you manage database session cleanup after a response using dependencies?",
+    "expected_sources": ["06_dependencies.md"],
+    "expected_headings": ["Dependencies with yield (Database Sessions)"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q16",
+    "question": "When does code after the yield statement in a dependency run?",
+    "expected_sources": ["06_dependencies.md"],
+    "expected_headings": ["Dependencies with yield (Database Sessions)"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q17",
+    "question": "What class extracts Bearer authentication tokens from incoming request headers?",
+    "expected_sources": ["07_security_oauth2.md"],
+    "expected_headings": ["OAuth2 Password Bearer Flow"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q18",
+    "question": "What status code is returned if an OAuth2 bearer token is missing or invalid?",
+    "expected_sources": ["07_security_oauth2.md"],
+    "expected_headings": ["OAuth2 Password Bearer Flow"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q19",
+    "question": "What are the three components of a JSON Web Token (JWT)?",
+    "expected_sources": ["07_security_oauth2.md"],
+    "expected_headings": ["JWT Token Structure"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q20",
+    "question": "How do you calculate request processing time and inject it into response headers?",
+    "expected_sources": ["08_middleware.md"],
+    "expected_headings": ["Custom Middleware Example"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q21",
+    "question": "In what order does a middleware function execute relative to call_next?",
+    "expected_sources": ["08_middleware.md"],
+    "expected_headings": ["Middleware Lifecycle Execution Order"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q22",
+    "question": "Which middleware is used to enable Cross-Origin Resource Sharing?",
+    "expected_sources": ["09_cors.md"],
+    "expected_headings": ["Setting up CORSMiddleware"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q23",
+    "question": "What configuration parameter specifies the list of allowed frontend origins?",
+    "expected_sources": ["09_cors.md"],
+    "expected_headings": ["CORSMiddleware Configuration Parameters"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q24",
+    "question": "How do you schedule tasks to run after returning a response using BackgroundTasks?",
+    "expected_sources": ["10_background_tasks.md"],
+    "expected_headings": ["Using BackgroundTasks"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q25",
+    "question": "How does FastAPI execute background tasks that are defined as synchronous def functions?",
+    "expected_sources": ["10_background_tasks.md"],
+    "expected_headings": ["Execution Model"],
+    "category": "easy_lookup",
+    "should_refuse": false
+  },
+  {
+    "id": "q26",
+    "question": "How does FastAPI compare to Node.js and Go in requests per second?",
+    "expected_sources": ["01_intro.md"],
+    "expected_headings": ["Performance Comparison Matrix"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q27",
+    "question": "How do you combine OAuth2 security dependencies with path operation handlers?",
+    "expected_sources": ["06_dependencies.md", "07_security_oauth2.md"],
+    "expected_headings": ["OAuth2 Password Bearer Flow", "Basic Dependency with Depends"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q28",
+    "question": "How do you send a notification email asynchronously after returning an HTTP response?",
+    "expected_sources": ["10_background_tasks.md"],
+    "expected_headings": ["Using BackgroundTasks"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q29",
+    "question": "What error format is returned when a client sends invalid types in path or query parameters?",
+    "expected_sources": ["03_path_params.md", "05_request_body.md"],
+    "expected_headings": ["Path Parameter Validation Error Structure"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q30",
+    "question": "How do you enable CORS for a local development server running on port 3000?",
+    "expected_sources": ["09_cors.md"],
+    "expected_headings": ["Setting up CORSMiddleware"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q31",
+    "question": "What happens when you return a dictionary from a path operation function?",
+    "expected_sources": ["02_first_steps.md"],
+    "expected_headings": ["Breakdown of the Code"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q32",
+    "question": "How do you handle database connections safely during requests and ensure they close?",
+    "expected_sources": ["06_dependencies.md"],
+    "expected_headings": ["Dependencies with yield (Database Sessions)"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q33",
+    "question": "What is the difference between path parameter parsing and query parameter parsing?",
+    "expected_sources": ["03_path_params.md", "04_query_params.md"],
+    "expected_headings": ["Basic Path Parameter Declaration", "Basic Query Parameters"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q34",
+    "question": "How do you define multiple HTTP methods like GET and POST on the same application?",
+    "expected_sources": ["02_first_steps.md"],
+    "expected_headings": ["HTTP Methods"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q35",
+    "question": "What claims are commonly stored inside the JWT token payload in FastAPI security?",
+    "expected_sources": ["07_security_oauth2.md"],
+    "expected_headings": ["JWT Token Structure"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q36",
+    "question": "Can middleware modify headers before returning the response to the client?",
+    "expected_sources": ["08_middleware.md"],
+    "expected_headings": ["Custom Middleware Example"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q37",
+    "question": "How do you configure max_age for CORS pre-flight cache responses?",
+    "expected_sources": ["09_cors.md"],
+    "expected_headings": ["CORSMiddleware Configuration Parameters"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q38",
+    "question": "What ASGI server does FastAPI use to achieve high asynchronous throughput?",
+    "expected_sources": ["01_intro.md"],
+    "expected_headings": ["Technical Foundation"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q39",
+    "question": "How does BackgroundTasks avoid blocking the client from receiving the response?",
+    "expected_sources": ["10_background_tasks.md"],
+    "expected_headings": ["Execution Model"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q40",
+    "question": "How does Pydantic model_dump serialize request body data into a Python dictionary?",
+    "expected_sources": ["05_request_body.md"],
+    "expected_headings": ["Declaring Request Bodies with Pydantic"],
+    "category": "multi_topic",
+    "should_refuse": false
+  },
+  {
+    "id": "q41",
+    "question": "How do you configure Kubernetes Ingress controllers with Traefik annotations?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q42",
+    "question": "What is the syntax for defining an ActiveRecord association in Ruby on Rails?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q43",
+    "question": "How do you configure quantum error correction circuits using Qiskit?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q44",
+    "question": "What is the proper pointer arithmetic syntax in C++ for 2D array traversal?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q45",
+    "question": "How do you write a Django makemigrations schema operation for foreign key constraints?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q46",
+    "question": "How do you configure Terraform AWS provider assume_role block?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q47",
+    "question": "What are the compiler flags for compiling Rust binaries with musl libc?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q48",
+    "question": "How do you calculate mortgage amortization schedules in Excel VBA?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q49",
+    "question": "What is the best recipe for baking sourdough bread with high hydration?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  },
+  {
+    "id": "q50",
+    "question": "How do you configure Apache Kafka consumer group rebalance protocol in Java?",
+    "expected_sources": [],
+    "expected_headings": [],
+    "category": "unanswerable_refusal",
+    "should_refuse": true
+  }
+]
