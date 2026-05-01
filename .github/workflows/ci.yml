@@ -1,0 +1,85 @@
+name: CI Quality Gate & Evaluation Suite
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-test-and-eval:
+    name: Lint, Test & Evaluation Gate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: docsqa
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d docsqa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install Dependencies
+        run: |
+          uv sync --all-groups
+
+      - name: Run Linter (Ruff)
+        run: |
+          uv run ruff check .
+
+      - name: Run Type Checker (mypy)
+        run: |
+          uv run mypy
+
+      - name: Run Unit & Integration Test Suite
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///test_ci.db"
+          MODEL_PROVIDER: "stub"
+        run: |
+          uv run pytest --cov=app --cov-report=term-missing tests/
+
+      - name: Run Evaluation Harness (CI Regression Gate)
+        env:
+          DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost:5432/docsqa"
+          REDIS_URL: "redis://localhost:6379/0"
+          MODEL_PROVIDER: "stub"
+        run: |
+          uv run alembic upgrade head
+          uv run python scripts/run_evals.py
+
+      - name: Upload Evaluation Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: evals-report
+          path: |
+            evals/latest_report.md
+            evals/latest_report.json
