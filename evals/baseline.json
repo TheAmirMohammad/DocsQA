@@ -1,0 +1,69 @@
+{
+  "environment": {
+    "database": "postgresql",
+    "model_provider": "stub",
+    "embedding_model": "stub-embedding@stub-v1.0"
+  },
+  "modes": {
+    "vector": {
+      "mode": "vector",
+      "total_queries": 50,
+      "answerable_queries": 40,
+      "unanswerable_queries": 10,
+      "hit_at_1": 0.325,
+      "hit_at_3": 0.55,
+      "hit_at_5": 0.65,
+      "mrr": 0.4487,
+      "refusal_accuracy": 1.0,
+      "false_refusal_rate": 0.15,
+      "citation_validity_rate": 0.85,
+      "faithfulness": 0.9586,
+      "avg_latency_ms": 3.25,
+      "p95_latency_ms": 4.42,
+      "hit_at_3_by_category": {
+        "easy_lookup": 0.56,
+        "multi_topic": 0.5333
+      }
+    },
+    "fts": {
+      "mode": "fts",
+      "total_queries": 50,
+      "answerable_queries": 40,
+      "unanswerable_queries": 10,
+      "hit_at_1": 0.525,
+      "hit_at_3": 0.8,
+      "hit_at_5": 0.875,
+      "mrr": 0.6675,
+      "refusal_accuracy": 0.9,
+      "false_refusal_rate": 0.05,
+      "citation_validity_rate": 0.95,
+      "faithfulness": 0.9809,
+      "avg_latency_ms": 3.14,
+      "p95_latency_ms": 4.55,
+      "hit_at_3_by_category": {
+        "easy_lookup": 0.88,
+        "multi_topic": 0.6667
+      }
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "total_queries": 50,
+      "answerable_queries": 40,
+      "unanswerable_queries": 10,
+      "hit_at_1": 0.45,
+      "hit_at_3": 0.65,
+      "hit_at_5": 0.775,
+      "mrr": 0.5596,
+      "refusal_accuracy": 0.9,
+      "false_refusal_rate": 0.05,
+      "citation_validity_rate": 0.95,
+      "faithfulness": 0.982,
+      "avg_latency_ms": 6.29,
+      "p95_latency_ms": 8.2,
+      "hit_at_3_by_category": {
+        "easy_lookup": 0.64,
+        "multi_topic": 0.6667
+      }
+    }
+  }
+}
