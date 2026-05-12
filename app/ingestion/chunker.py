@@ -25,6 +25,14 @@ class MarkdownChunker:
     def __init__(self, max_words: int = 400):
         self.max_words = max_words
 
+    @staticmethod
+    def extract_title(text: str, fallback: str = "Document") -> str:
+        for line in text.splitlines():
+            m = re.match(r"^ {0,3}#\s+(.+)$", line)
+            if m:
+                return m.group(1).strip()
+        return fallback
+
     def chunk_document(self, text: str, source_path: str = "") -> list[ChunkDraft]:
         """
         One chunk per heading section, so a chunk's heading (and citation anchor) is the
