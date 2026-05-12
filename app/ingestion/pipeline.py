@@ -11,8 +11,12 @@ from app.config import settings
 from app.db.models import Chunk, Document, IngestionJob
 from app.db.session import bump_index_version
 from app.ingestion.chunker import MarkdownChunker
+from app.ingestion.git_source import clone_git_repository
 from app.ingestion.hasher import compute_sha256
+from app.ingestion.parsers import DocumentParserFactory
 from app.models_adapter import get_model_adapter
+
+SUPPORTED_EXTENSIONS = (".md", ".markdown", ".rst", ".rest", ".html", ".htm")
 
 
 class IngestionPipeline:
@@ -67,11 +71,11 @@ class IngestionPipeline:
 
         index_changed = False  # set once any file's new chunks are committed
         try:
-            # 1. Discover all markdown files
+            # 1. Discover all documentation files (Markdown, reST, HTML)
             discovered_files: list[Path] = []
             for root, _, files in os.walk(target_path):
                 for name in files:
-                    if name.endswith((".md", ".markdown")):
+                    if name.endswith(SUPPORTED_EXTENSIONS):
                         discovered_files.append(Path(root) / name)
             discovered_files.sort()
 
@@ -91,7 +95,7 @@ class IngestionPipeline:
                     content = f.read()
 
                 file_hash = compute_sha256(content)
-                title = self._extract_title(content, fallback=file_path.stem)
+                title, chunks = DocumentParserFactory.parse_file(file_path, content)
 
                 # Check if document already exists
                 stmt = select(Document).where(Document.source_path == rel_path)
@@ -108,7 +112,6 @@ class IngestionPipeline:
 
                 # Document is either brand new or modified
                 docs_modified += 1
-                chunks = self.chunker.chunk_document(content, source_path=rel_path)
 
                 # Generate embeddings in batch
                 chunk_texts = [c.content for c in chunks]
@@ -207,6 +210,18 @@ class IngestionPipeline:
             .limit(1)
         )
         return res.first() is not None
+
+    async def ingest_git_repository(
+        self,
+        git_url: str,
+        branch: str = "main",
+        subpath: str | None = None,
+        job_id: str | None = None,
+    ) -> IngestionJob:
+        """Clones a remote git repository and ingests documentation files."""
+        cloned_dir = clone_git_repository(git_url, branch=branch)
+        target_dir = cloned_dir / subpath if subpath else cloned_dir
+        return await self.ingest_directory(str(target_dir), job_id=job_id)
 
     def _extract_title(self, content: str, fallback: str) -> str:
         for line in content.splitlines():

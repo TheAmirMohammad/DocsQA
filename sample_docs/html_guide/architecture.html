@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FastAPI Architectural Patterns and ASGI</title>
+</head>
+<body>
+    <header>
+        <nav><a href="/">Docs Home</a></nav>
+    </header>
+    <main>
+        <h1>ASGI Architecture and Lifespans</h1>
+        <p>FastAPI is an asynchronous Server Gateway Interface (ASGI) framework designed around asynchronous coroutines and high-concurrency event loops.</p>
+
+        <h2>Lifespan Context Managers</h2>
+        <p>Manage application startup and shutdown lifecycle using asynccontextmanager instead of deprecated on_event handlers.</p>
+        <pre><code>
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: initialize database pool
+    yield
+    # Shutdown: close connections
+        </code></pre>
+
+        <h2>Concurrency Model</h2>
+        <p>Endpoints defined with async def run directly on the asyncio event loop. Normal def functions run in an external thread pool to prevent blocking.</p>
+    </main>
+    <footer>
+        <p>Copyright 2026 Documentation Team</p>
+    </footer>
+</body>
+</html>
