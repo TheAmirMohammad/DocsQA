@@ -7,11 +7,12 @@ from pydantic import BaseModel, Field
 
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=3, description="The technical question to answer from documentation.")
-    mode: Literal["hybrid", "vector", "fts"] = Field(
+    mode: Literal["hybrid", "vector", "fts", "hybrid_weighted"] = Field(
         default="hybrid",
-        description="Retrieval strategy: 'hybrid' (vector + FTS with RRF), 'vector' (pgvector only), or 'fts' (Postgres full-text search only).",
+        description="Retrieval strategy: 'hybrid' (RRF), 'hybrid_weighted' (weighted RRF), 'vector' (pgvector), or 'fts' (full-text search).",
     )
     top_k: int = Field(default=5, ge=1, le=20, description="Maximum number of context chunks to retrieve.")
+    rerank: bool = Field(default=False, description="Whether to apply post-retrieval cross-encoder / semantic reranking.")
     bypass_cache: bool = Field(default=False, description="Whether to bypass semantic response cache.")
 
 
@@ -47,6 +48,18 @@ class IngestRequest(BaseModel):
     source_path: str | None = Field(
         default=None,
         description="Relative or absolute path to docs directory. Defaults to configured SAMPLE_DOCS_PATH.",
+    )
+    git_url: str | None = Field(
+        default=None,
+        description="Optional Git repository URL to clone and ingest (HTTP/HTTPS or SSH).",
+    )
+    branch: str = Field(
+        default="main",
+        description="Branch name when cloning git repository.",
+    )
+    subpath: str | None = Field(
+        default=None,
+        description="Optional subfolder path inside cloned git repository to ingest.",
     )
 
 

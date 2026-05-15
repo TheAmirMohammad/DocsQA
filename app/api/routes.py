@@ -58,7 +58,7 @@ async def ask_question(
     """
     start_time = time.perf_counter()
     index_version = await get_or_create_index_version(session)
-    cache_variant = f"{payload.mode}:top{payload.top_k}"  # same question, different top_k = different answer
+    cache_variant = f"{payload.mode}:top{payload.top_k}:rerank{payload.rerank}"
 
     # 1. Semantic Cache check
     if not payload.bypass_cache:
@@ -88,6 +88,7 @@ async def ask_question(
         query_text=payload.question,
         mode=payload.mode,
         top_k=payload.top_k,
+        rerank=payload.rerank,
     )
 
     latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
@@ -180,21 +181,29 @@ async def trigger_ingestion(
     session: AsyncSession = Depends(get_db_session),
 ) -> IngestResponse:
     """Queue or run incremental documentation ingestion with content-hash checks."""
-    source_dir = payload.source_path or settings.SAMPLE_DOCS_PATH
-    # Trust boundary: never let a request read arbitrary server directories
-    try:
-        resolved = Path(source_dir).resolve()
-        allowed = resolved.is_relative_to(Path(settings.DOCS_ROOT).resolve()) and resolved.is_dir()
-    except (ValueError, OSError):
-        allowed = False
-    if not allowed:
-        raise HTTPException(status_code=400, detail="source_path must be a directory under DOCS_ROOT")
-    job_id = str(uuid.uuid4())
+    if payload.git_url:
+        from app.ingestion.git_source import sanitize_repo_name
+        repo_name = sanitize_repo_name(payload.git_url)
+        git_target = Path(settings.DOCS_ROOT) / "git_repos" / repo_name
+        source_dir = str(git_target / payload.subpath if payload.subpath else git_target)
+        display_path = f"git:{payload.git_url}@{payload.branch}"
+    else:
+        source_dir = payload.source_path or settings.SAMPLE_DOCS_PATH
+        # Trust boundary: never let a request read arbitrary server directories
+        try:
+            resolved = Path(source_dir).resolve()
+            allowed = resolved.is_relative_to(Path(settings.DOCS_ROOT).resolve()) and resolved.is_dir()
+        except (ValueError, OSError):
+            allowed = False
+        if not allowed:
+            raise HTTPException(status_code=400, detail="source_path must be a directory under DOCS_ROOT")
+        source_dir = str(resolved)  # hand the checked absolute path to the worker, not the raw input
+        display_path = source_dir
 
-    source_dir = str(resolved)  # hand the checked absolute path to the worker, not the raw input
+    job_id = str(uuid.uuid4())
     job = IngestionJob(
         id=job_id,
-        source_path=source_dir,
+        source_path=display_path,
         status="pending",
     )
     session.add(job)
@@ -223,7 +232,15 @@ async def trigger_ingestion(
             async with AsyncSessionLocal() as bg_session:
                 pipeline = IngestionPipeline(bg_session)
                 try:
-                    await pipeline.ingest_directory(source_dir, job_id=job_id)
+                    if payload.git_url:
+                        await pipeline.ingest_git_repository(
+                            git_url=payload.git_url,
+                            branch=payload.branch,
+                            subpath=payload.subpath,
+                            job_id=job_id,
+                        )
+                    else:
+                        await pipeline.ingest_directory(source_dir, job_id=job_id)
                     INGESTION_JOBS_TOTAL.labels(status="completed").inc()
                     # Update gauge
                     count_res = await bg_session.execute(select(func.count(Chunk.id)))
@@ -237,7 +254,7 @@ async def trigger_ingestion(
     return IngestResponse(
         job_id=job_id,
         status="pending",
-        message=f"Ingestion job for '{source_dir}' registered.",
+        message=f"Ingestion job for '{display_path}' registered.",
     )
 
 
