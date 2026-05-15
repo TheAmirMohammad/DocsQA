@@ -219,10 +219,11 @@
             "enum": [
               "hybrid",
               "vector",
-              "fts"
+              "fts",
+              "hybrid_weighted"
             ],
             "title": "Mode",
-            "description": "Retrieval strategy: 'hybrid' (vector + FTS with RRF), 'vector' (pgvector only), or 'fts' (Postgres full-text search only).",
+            "description": "Retrieval strategy: 'hybrid' (RRF), 'hybrid_weighted' (weighted RRF), 'vector' (pgvector), or 'fts' (full-text search).",
             "default": "hybrid"
           },
           "top_k": {
@@ -232,6 +233,12 @@
             "title": "Top K",
             "description": "Maximum number of context chunks to retrieve.",
             "default": 5
+          },
+          "rerank": {
+            "type": "boolean",
+            "title": "Rerank",
+            "description": "Whether to apply post-retrieval cross-encoder / semantic reranking.",
+            "default": false
           },
           "bypass_cache": {
             "type": "boolean",
@@ -455,6 +462,36 @@
             ],
             "title": "Source Path",
             "description": "Relative or absolute path to docs directory. Defaults to configured SAMPLE_DOCS_PATH."
+          },
+          "git_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Git Url",
+            "description": "Optional Git repository URL to clone and ingest (HTTP/HTTPS or SSH)."
+          },
+          "branch": {
+            "type": "string",
+            "title": "Branch",
+            "description": "Branch name when cloning git repository.",
+            "default": "main"
+          },
+          "subpath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subpath",
+            "description": "Optional subfolder path inside cloned git repository to ingest."
           }
         },
         "type": "object",

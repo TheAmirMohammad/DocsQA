@@ -11,6 +11,7 @@ from app.config import settings
 from app.db.models import Chunk
 from app.models_adapter import get_model_adapter
 from app.retrieval.fts import search_fts
+from app.retrieval.reranker import get_reranker
 from app.retrieval.rrf import reciprocal_rank_fusion
 from app.retrieval.vector import search_vector
 
@@ -22,6 +23,12 @@ def as_untrusted_data(text: str) -> str:
     while (cleaned := _CONTEXT_TAG.sub("", text)) != text:  # repeat: "</con</context>text>" reassembles
         text = cleaned
     return text
+
+
+_INJECTION_PATTERN = re.compile(
+    r"\b(ignore\s+(?:all\s+|previous\s+|prior\s+)?instructions|system\s+instructions?\s+verbatim|system\s+prompt|you\s+are\s+now\s+dan)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -63,11 +70,12 @@ class RetrievalEngine:
     async def query(
         self,
         query_text: str,
-        mode: Literal["hybrid", "vector", "fts"] = "hybrid",
+        mode: Literal["hybrid", "vector", "fts", "hybrid_weighted"] = "hybrid",
         top_k: int = settings.RETRIEVAL_TOP_K,
+        rerank: bool = False,
     ) -> RetrievalResponse:
         clean_query = query_text.strip()
-        if not clean_query:
+        if not clean_query or _INJECTION_PATTERN.search(clean_query):
             return RetrievalResponse(
                 answer="I do not have sufficient information in the documentation to answer this question.",
                 citations=[],
@@ -81,7 +89,7 @@ class RetrievalEngine:
         vector_candidates: list[tuple[Chunk, float]] = []
         fts_candidates: list[tuple[Chunk, float]] = []
 
-        if mode in ("hybrid", "vector"):
+        if mode in ("hybrid", "hybrid_weighted", "vector"):
             query_vec = await self.adapter.embed_query(clean_query)
             if query_vec:
                 vector_candidates = await search_vector(
@@ -92,7 +100,7 @@ class RetrievalEngine:
                     limit=settings.RETRIEVAL_VECTOR_CANDIDATES,
                 )
 
-        if mode in ("hybrid", "fts"):
+        if mode in ("hybrid", "hybrid_weighted", "fts"):
             fts_candidates = await search_fts(
                 self.session, clean_query, limit=settings.RETRIEVAL_FTS_CANDIDATES
             )
@@ -105,11 +113,21 @@ class RetrievalEngine:
         # 2. Rank candidates
         selected_chunks: list[tuple[Chunk, float, int | None, int | None]] = []
 
-        if mode == "hybrid":
+        if mode in ("hybrid", "hybrid_weighted"):
             vec_pairs = [(c.id, score) for c, score in vector_candidates]
             fts_pairs = [(c.id, score) for c, score in fts_candidates]
+            
+            w_vec = settings.RRF_WEIGHT_VECTOR if mode == "hybrid_weighted" else 1.0
+            w_fts = settings.RRF_WEIGHT_FTS if mode == "hybrid_weighted" else 1.0
+            candidate_pool = top_k * 2 if rerank else top_k
+
             fused = reciprocal_rank_fusion(
-                vec_pairs, fts_pairs, k=settings.RRF_K, top_n=top_k
+                vec_pairs,
+                fts_pairs,
+                k=settings.RRF_K,
+                top_n=candidate_pool,
+                weight_vector=w_vec,
+                weight_fts=w_fts,
             )
 
             # Map chunk IDs to objects
@@ -135,12 +153,21 @@ class RetrievalEngine:
                     ))
 
         elif mode == "vector":
-            for rank, (c, score) in enumerate(vector_candidates[:top_k], start=1):
+            candidate_pool = top_k * 2 if rerank else top_k
+            for rank, (c, score) in enumerate(vector_candidates[:candidate_pool], start=1):
                 selected_chunks.append((c, score, rank, None))
 
         elif mode == "fts":
-            for rank, (c, score) in enumerate(fts_candidates[:top_k], start=1):
+            candidate_pool = top_k * 2 if rerank else top_k
+            for rank, (c, score) in enumerate(fts_candidates[:candidate_pool], start=1):
                 selected_chunks.append((c, score, None, rank))
+
+        # 3. Optional Reranking step
+        if rerank and selected_chunks:
+            reranker = get_reranker()
+            selected_chunks = await reranker.rerank(clean_query, selected_chunks, top_k=top_k)
+        else:
+            selected_chunks = selected_chunks[:top_k]
 
         # 3. Check for confidence and refusal
         top_score = selected_chunks[0][1] if selected_chunks else 0.0

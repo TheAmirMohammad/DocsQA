@@ -49,7 +49,11 @@ class Settings(BaseSettings):
     RETRIEVAL_VECTOR_CANDIDATES: int = 20
     RETRIEVAL_FTS_CANDIDATES: int = 20
     RRF_K: int = 60
+    RRF_WEIGHT_VECTOR: float = 0.6  # Default weight for vector similarity in weighted RRF
+    RRF_WEIGHT_FTS: float = 0.4     # Default weight for full-text search in weighted RRF
     VECTOR_MIN_SIMILARITY: float = 0.15  # cosine floor; below it a chunk is not evidence
+    RERANKER_ENABLED: bool = False
+    RERANKER_TOP_K: int = 5
 
     # Semantic Cache
     CACHE_TTL_SECONDS: int = 86400

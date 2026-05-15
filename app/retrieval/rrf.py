@@ -25,17 +25,22 @@ def reciprocal_rank_fusion(
     fts_results: list[tuple[str, float]],
     k: int = 60,
     top_n: int = 5,
+    weight_vector: float = 1.0,
+    weight_fts: float = 1.0,
 ) -> list[FusedResult]:
     """
-    Combines vector search and full-text search results using Reciprocal Rank Fusion.
+    Combines vector search and full-text search results using Reciprocal Rank Fusion,
+    with optional channel weighting.
     
-    Formula: RRF_score(d) = sum_{m} 1 / (k + rank_m(d))
+    Formula: RRF_score(d) = sum_{m} w_m / (k + rank_m(d))
     
     Args:
         vector_results: List of (chunk_id, vector_similarity_score) ordered by relevance descending.
         fts_results: List of (chunk_id, fts_rank_score) ordered by relevance descending.
         k: Smoothing constant, standard default 60.
         top_n: Number of fused results to return.
+        weight_vector: Multiplier for vector channel score (default 1.0).
+        weight_fts: Multiplier for FTS channel score (default 1.0).
     """
     scores: dict[str, float] = {}
     vec_map: dict[str, tuple[int, float]] = {}
@@ -43,11 +48,11 @@ def reciprocal_rank_fusion(
 
     for rank, (chunk_id, score) in enumerate(vector_results, start=1):
         vec_map[chunk_id] = (rank, score)
-        scores[chunk_id] = scores.get(chunk_id, 0.0) + (1.0 / (k + rank))
+        scores[chunk_id] = scores.get(chunk_id, 0.0) + (weight_vector / (k + rank))
 
     for rank, (chunk_id, score) in enumerate(fts_results, start=1):
         fts_map[chunk_id] = (rank, score)
-        scores[chunk_id] = scores.get(chunk_id, 0.0) + (1.0 / (k + rank))
+        scores[chunk_id] = scores.get(chunk_id, 0.0) + (weight_fts / (k + rank))
 
     # Sort descending by fused RRF score
     sorted_items = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:top_n]
