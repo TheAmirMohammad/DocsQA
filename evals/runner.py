@@ -19,6 +19,7 @@ from app.db.session import AsyncSessionLocal, init_db
 from app.ingestion.pipeline import IngestionPipeline
 from app.models_adapter import get_model_adapter
 from app.retrieval.engine import RetrievalEngine
+from evals.faithfulness import evaluate_faithfulness
 from evals.metrics import (
     ModeSummaryMetrics,
     QueryEvalResult,
@@ -66,7 +67,7 @@ class EvalRunner:
         return list(res.scalars().all())
 
     async def run_evaluation(self, modes: list[str] | None = None) -> dict[str, ModeSummaryMetrics]:
-        modes = modes or ["vector", "fts", "hybrid"]
+        modes = modes or ["vector", "fts", "hybrid", "hybrid_weighted", "hybrid_reranked"]
         dataset: list[dict[str, Any]] = json.loads(self.dataset_path.read_text(encoding="utf-8"))
 
         engine = RetrievalEngine(self.session)
@@ -74,13 +75,21 @@ class EvalRunner:
 
         for mode in modes:
             results: list[QueryEvalResult] = []
+            rerank_flag = mode in ("hybrid_reranked", "reranked")
+            actual_mode = "hybrid" if mode in ("hybrid", "hybrid_reranked", "reranked") else mode
+
             for item in dataset:
                 expected_sources = item.get("expected_sources", [])
                 expected_headings = item.get("expected_headings", [])
                 should_refuse = item.get("should_refuse", False)
 
                 start = time.perf_counter()
-                res = await engine.query(query_text=item["question"], mode=mode, top_k=5)  # type: ignore[arg-type]
+                res = await engine.query(
+                    query_text=item["question"],
+                    mode=actual_mode,  # type: ignore[arg-type]
+                    top_k=5,
+                    rerank=rerank_flag,
+                )
                 latency_ms = (time.perf_counter() - start) * 1000.0
 
                 # A hit needs the right file AND (when given) the right section
@@ -95,9 +104,17 @@ class EvalRunner:
                 answered = not res.refused and bool(res.citations)
                 retrieved_ids = {rc.chunk_id for rc in res.retrieved_chunks}
                 faithfulness = None
+                llm_faith = None
                 if answered:
                     cited = await self._chunk_texts([c.chunk_id for c in res.citations])
                     faithfulness = lexical_faithfulness(res.answer, cited)
+                    f_res = await evaluate_faithfulness(
+                        question=item["question"],
+                        context="\n\n".join(cited),
+                        answer=res.answer,
+                        model_adapter=engine.adapter,
+                    )
+                    llm_faith = f_res.score
 
                 results.append(
                     QueryEvalResult(
@@ -114,6 +131,7 @@ class EvalRunner:
                         latency_ms=latency_ms,
                         top_score=res.top_score,
                         faithfulness=faithfulness,
+                        llm_faithfulness=llm_faith,
                         retrieved_sources=[rc.source_url for rc in res.retrieved_chunks],
                     )
                 )
@@ -139,14 +157,14 @@ class EvalRunner:
             ),
             "**Environment:** " + ", ".join(f"{k}=`{v}`" for k, v in environment.items()),
             "",
-            "| Mode | Hit@1 | Hit@3 | Hit@5 | MRR | Refusal acc. | False refusals | Valid citations | Faithfulness | Avg latency | P95 latency |",
-            "|---|---|---|---|---|---|---|---|---|---|---|",
+            "| Mode | Hit@1 | Hit@3 | Hit@5 | MRR | Refusal acc. | False refusals | Valid citations | Lex. Faith. | LLM Faith. | Avg latency | P95 latency |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for mode, m in mode_metrics.items():
             lines.append(
                 f"| {mode} | {m.hit_at_1:.1%} | {m.hit_at_3:.1%} | {m.hit_at_5:.1%} | {m.mrr:.3f} | "
                 f"{m.refusal_accuracy:.1%} | {m.false_refusal_rate:.1%} | {m.citation_validity_rate:.1%} | "
-                f"{m.faithfulness:.1%} | {m.avg_latency_ms:.1f}ms | {m.p95_latency_ms:.1f}ms |"
+                f"{m.faithfulness:.1%} | {m.llm_faithfulness:.1%} | {m.avg_latency_ms:.1f}ms | {m.p95_latency_ms:.1f}ms |"
             )
 
         categories = sorted({c for m in mode_metrics.values() for c in m.hit_at_3_by_category})
