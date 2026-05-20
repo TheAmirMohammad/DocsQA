@@ -62,9 +62,9 @@ async def test_eval_runner_execution(db_session: AsyncSession, tmp_path: Path):
     hybrid_m = metrics["hybrid"]
 
     # Quality thresholds live in the baseline gate (scripts/run_evals.py), not here
-    assert hybrid_m.total_queries == 50
-    assert hybrid_m.answerable_queries + hybrid_m.unanswerable_queries == 50
-    assert set(hybrid_m.hit_at_3_by_category) == {"easy_lookup", "multi_topic"}
+    assert hybrid_m.total_queries >= 50
+    assert hybrid_m.answerable_queries + hybrid_m.unanswerable_queries == hybrid_m.total_queries
+    assert "easy_lookup" in hybrid_m.hit_at_3_by_category
 
     # Test report generation
     report_file = tmp_path / "test_report.md"

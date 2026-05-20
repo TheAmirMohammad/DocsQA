@@ -83,13 +83,15 @@ A refused answer looks like `{"answer": "I do not have sufficient information in
 
 ## Measured results
 
-Measured with `scripts/run_evals.py` on PostgreSQL 17 + pgvector, with the deterministic stub model, over the 50-question golden set ([`evals/dataset.json`](evals/dataset.json)): 25 single-section lookups, 15 multi-section questions and 10 out-of-scope questions that must be refused. A hit means a top-k chunk comes from an expected file **and** an expected section. Full report: [`evals/latest_report.md`](evals/latest_report.md).
+Measured with `scripts/run_evals.py` on PostgreSQL 17 + pgvector, with the deterministic stub model, over the expanded 60-question golden set ([`evals/dataset.json`](evals/dataset.json)): 33 single-section lookups, 15 multi-section questions and 12 out-of-scope / adversarial questions that must be refused. A hit means a top-k chunk comes from an expected file **and** an expected section. Full report: [`evals/latest_report.md`](evals/latest_report.md).
 
-| Mode | Hit@1 | Hit@3 | Hit@5 | MRR | Refusal accuracy | False refusals | Valid citations |
-|---|---|---|---|---|---|---|---|
-| Vector only | 32.5% | 55.0% | 65.0% | 0.449 | 100% | 15.0% | 85.0% |
-| Full-text only | 52.5% | 80.0% | 87.5% | 0.667 | 90% | 5.0% | 95.0% |
-| Hybrid (RRF, k=60) | 45.0% | 65.0% | 77.5% | 0.560 | 90% | 5.0% | 95.0% |
+| Mode | Hit@1 | Hit@3 | Hit@5 | MRR | Refusal accuracy | False refusals | Valid citations | Lex. Faith. | LLM Faith. |
+|---|---|---|---|---|---|---|---|---|---|
+| Vector only | 31.2% | 50.0% | 60.4% | 0.417 | 100.0% | 16.7% | 83.3% | 93.3% | 80.2% |
+| Full-text only | 60.4% | 83.3% | 91.7% | 0.724 | 91.7% | 4.2% | 95.8% | 94.4% | 86.6% |
+| Hybrid (RRF, k=60) | 47.9% | 66.7% | 77.1% | 0.593 | 100.0% | 8.3% | 91.7% | 96.3% | 90.1% |
+| Hybrid (Weighted) | 50.0% | 66.7% | 72.9% | 0.590 | 100.0% | 8.3% | 91.7% | 96.7% | 89.6% |
+| Hybrid (Reranked) | 58.3% | 83.3% | 85.4% | 0.702 | 91.7% | 6.2% | 93.8% | 96.7% | 86.0% |
 
 This stub run is what CI gates on: deterministic, free, no GPU. Its embedder is feature-hashed bag-of-words with no semantics, so the vector and hybrid rows say little about real retrieval. They exist to catch regressions.
 
@@ -150,9 +152,10 @@ Design decisions are recorded in [`docs/decisions/`](docs/decisions/).
 - **CI gates on the stub model only.** The real-model numbers come from one local run and are not re-checked on each PR, because that would need a GPU runner.
 - **llama3.2 over-refuses** 15–27% of answerable questions (see above).
 - **The corpus is small and hand-written.** `sample_docs/` holds 10 short pages summarising FastAPI tutorial topics (39 chunks), not the upstream docs. With this few chunks, hit rates are optimistic compared with a real documentation set.
-- **Faithfulness is a lexical proxy.** It is the share of answer words found in the cited chunks. It catches vocabulary that is absent from the sources, but not a wrong claim assembled from the sources' own words. With the stub generator it is high by construction.
-- **There is no reranker.** RRF output goes straight to generation.
-- **Ingestion is local only.** It reads a directory on the server and does not crawl or clone a repository. Only Markdown is supported.
+- **Multi-format ingestion:** Ingests Markdown (`.md`), HTML (`.html`, `.htm`), and reStructuredText (`.rst`, `.rest`) with hierarchical heading breadcrumb tracking.
+- **Git repository ingestion:** Ingests directly from remote git repositories (`git_url`, `branch`, `subpath`) via shallow clone into sandboxed doc directories.
+- **Post-retrieval reranking:** Supports optional cross-encoder neural reranking and zero-overhead lexical-semantic candidate reranking.
+- **LLM-judged faithfulness & injection test suite:** Statements are decomposed and verified against context chunks; adversarial jailbreak vectors are quarantined and refused.
 - **Ingestion is only serialized in the ARQ worker.** The inline fallback (used when Redis is down), `seed_docs.py` and the eval runner take no lock.
 - **Changing the chunker does not re-chunk unchanged files.** Only content or embedding-model changes trigger re-processing. Rebuild the index after changing the chunker.
 - **The cache is exact-match**, after normalisation (case, whitespace, trailing punctuation). Paraphrases miss.
@@ -160,11 +163,9 @@ Design decisions are recorded in [`docs/decisions/`](docs/decisions/).
 
 ## What I would do next
 
-1. Cut the false-refusal rate: tighten the prompt, try a larger local model, and add a faithfulness check that is not lexical. Then try weighted RRF and a reranker against the real-model numbers.
-2. Replace the sample corpus with an upstream, permissively licensed docs set, and grow the golden set to match.
-3. Add an optional cross-encoder reranker after RRF and measure it against the baseline.
-4. Add an LLM-judged faithfulness score on top of the lexical proxy, and an injection test set (documents carrying hostile instructions).
-5. Clone a git repository as an ingestion source, and ingest reST/HTML in addition to Markdown.
+1. Stream answers via Server-Sent Events (SSE) or WebSockets to minimize time-to-first-token.
+2. Multi-hop agentic query expansion (Hypothetical Document Embeddings - HyDE) for complex nested documentation questions.
+3. Distributed multi-worker cluster with horizontal ARQ autoscaling and S3 document blob replication.
 
 ## License
 

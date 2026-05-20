@@ -23,7 +23,8 @@ class QueryEvalResult:
     citation_valid: bool
     latency_ms: float
     top_score: float
-    faithfulness: float | None = None  # None when no answer was produced
+    faithfulness: float | None = None  # lexical proxy
+    llm_faithfulness: float | None = None  # statement-level entailment
     retrieved_sources: list[str] = field(default_factory=list)
 
 
@@ -41,6 +42,7 @@ class ModeSummaryMetrics:
     false_refusal_rate: float
     citation_validity_rate: float
     faithfulness: float
+    llm_faithfulness: float
     avg_latency_ms: float
     p95_latency_ms: float
     hit_at_3_by_category: dict[str, float] = field(default_factory=dict)
@@ -72,6 +74,7 @@ def compute_mode_metrics(mode: str, results: list[QueryEvalResult]) -> ModeSumma
     answerable = [r for r in results if not r.should_refuse]
     unanswerable = [r for r in results if r.should_refuse]
     faithful = [r.faithfulness for r in answerable if r.faithfulness is not None]
+    llm_faithful = [r.llm_faithfulness for r in answerable if r.llm_faithfulness is not None]
 
     latencies = sorted(r.latency_ms for r in results)
     p95 = latencies[min(int(0.95 * len(latencies)), len(latencies) - 1)] if latencies else 0.0
@@ -91,6 +94,7 @@ def compute_mode_metrics(mode: str, results: list[QueryEvalResult]) -> ModeSumma
         false_refusal_rate=_rate(answerable, lambda r: r.actually_refused),
         citation_validity_rate=_rate(answerable, lambda r: r.citation_valid),
         faithfulness=round(sum(faithful) / len(faithful), 4) if faithful else 0.0,
+        llm_faithfulness=round(sum(llm_faithful) / len(llm_faithful), 4) if llm_faithful else 0.0,
         avg_latency_ms=round(sum(latencies) / len(latencies), 2) if latencies else 0.0,
         p95_latency_ms=round(p95, 2),
         hit_at_3_by_category={
