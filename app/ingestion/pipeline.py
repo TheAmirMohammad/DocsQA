@@ -16,7 +16,33 @@ from app.ingestion.hasher import compute_sha256
 from app.ingestion.parsers import DocumentParserFactory
 from app.models_adapter import get_model_adapter
 
-SUPPORTED_EXTENSIONS = (".md", ".markdown", ".rst", ".rest", ".html", ".htm")
+SUPPORTED_EXTENSIONS = (
+    ".md",
+    ".markdown",
+    ".rst",
+    ".rest",
+    ".html",
+    ".htm",
+    ".pdf",
+    ".docx",
+    ".doc",
+    ".xlsx",
+    ".xls",
+    ".csv",
+    ".tsv",
+    ".pptx",
+    ".ppt",
+)
+
+BINARY_EXTENSIONS = (
+    ".pdf",
+    ".docx",
+    ".doc",
+    ".xlsx",
+    ".xls",
+    ".pptx",
+    ".ppt",
+)
 
 
 class IngestionPipeline:
@@ -91,11 +117,16 @@ class IngestionPipeline:
                 rel_path = file_path.relative_to(base).as_posix()
                 seen_source_paths.add(rel_path)
 
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
+                suffix = file_path.suffix.lower()
+                if suffix in BINARY_EXTENSIONS:
+                    with open(file_path, "rb") as f:
+                        file_data: str | bytes = f.read()
+                else:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        file_data = f.read()
 
-                file_hash = compute_sha256(content)
-                title, chunks = DocumentParserFactory.parse_file(file_path, content)
+                file_hash = compute_sha256(file_data)
+                title, chunks = DocumentParserFactory.parse_file(file_path, file_data)
 
                 # Check if document already exists
                 stmt = select(Document).where(Document.source_path == rel_path)

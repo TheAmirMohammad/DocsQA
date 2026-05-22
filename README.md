@@ -152,7 +152,7 @@ Design decisions are recorded in [`docs/decisions/`](docs/decisions/).
 - **CI gates on the stub model only.** The real-model numbers come from one local run and are not re-checked on each PR, because that would need a GPU runner.
 - **llama3.2 over-refuses** 15–27% of answerable questions (see above).
 - **The corpus is small and hand-written.** `sample_docs/` holds 10 short pages summarising FastAPI tutorial topics (39 chunks), not the upstream docs. With this few chunks, hit rates are optimistic compared with a real documentation set.
-- **Multi-format ingestion:** Ingests Markdown (`.md`), HTML (`.html`, `.htm`), and reStructuredText (`.rst`, `.rest`) with hierarchical heading breadcrumb tracking.
+- **Multi-format ingestion:** Ingests Markdown (`.md`), HTML (`.html`, `.htm`), reStructuredText (`.rst`, `.rest`), PDF (`.pdf`), Word (`.docx`, `.doc`), Excel (`.xlsx`, `.xls`, `.csv`, `.tsv`), and PowerPoint (`.pptx`, `.ppt`) with page citations, slide headers, table extraction, and hierarchical heading breadcrumb tracking.
 - **Git repository ingestion:** Ingests directly from remote git repositories (`git_url`, `branch`, `subpath`) via shallow clone into sandboxed doc directories.
 - **Post-retrieval reranking:** Supports optional cross-encoder neural reranking and zero-overhead lexical-semantic candidate reranking.
 - **LLM-judged faithfulness & injection test suite:** Statements are decomposed and verified against context chunks; adversarial jailbreak vectors are quarantined and refused.
